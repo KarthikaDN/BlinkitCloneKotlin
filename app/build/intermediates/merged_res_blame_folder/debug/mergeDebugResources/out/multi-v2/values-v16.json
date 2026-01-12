@@ -1,0 +1,20 @@
+{
+    "logs": [
+        {
+            "outputFile": "com.kotlinpractice.blinkitclone.app-mergeDebugResources-52:/values-v16/values-v16.xml",
+            "map": [
+                {
+                    "source": "C:\\Users\\karthika.dn\\.gradle\\caches\\8.13\\transforms\\0a96ee74bf31ada3569b5948ac40e61a\\transformed\\appcompat-1.7.1\\res\\values-v16\\values-v16.xml",
+                    "from": {
+                        "startLines": "2",
+                        "startColumns": "4",
+                        "startOffsets": "55",
+                        "endLines": "5",
+                        "endColumns": "12",
+                        "endOffsets": "223"
+                    }
+                }
+            ]
+        }
+    ]
+}

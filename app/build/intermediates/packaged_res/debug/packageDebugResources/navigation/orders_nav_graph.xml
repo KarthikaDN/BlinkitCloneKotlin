@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<navigation xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:id="@+id/orders_nav_graph"
+    app:startDestination="@id/ordersFragment">
+
+    <fragment
+        android:id="@+id/ordersFragment"
+        android:name="com.kotlinpractice.blinkitclone.ui.orders.OrdersFragment"
+        android:label="Orders"/>
+
+</navigation>

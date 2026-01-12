@@ -1,0 +1,38 @@
+[
+  {
+    "name": "cart_nav_graph",
+    "navigationXmlIds": [],
+    "deepLinks": []
+  },
+  {
+    "name": "home_nav_graph",
+    "navigationXmlIds": [],
+    "deepLinks": []
+  },
+  {
+    "name": "main_nav_graph",
+    "navigationXmlIds": [
+      "home_nav_graph",
+      "search_nav_graph",
+      "cart_nav_graph",
+      "orders_nav_graph",
+      "profile_nav_graph"
+    ],
+    "deepLinks": []
+  },
+  {
+    "name": "orders_nav_graph",
+    "navigationXmlIds": [],
+    "deepLinks": []
+  },
+  {
+    "name": "profile_nav_graph",
+    "navigationXmlIds": [],
+    "deepLinks": []
+  },
+  {
+    "name": "search_nav_graph",
+    "navigationXmlIds": [],
+    "deepLinks": []
+  }
+]
