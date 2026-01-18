@@ -19,5 +19,5 @@ dependencyResolutionManagement {
     }
 }
 
-rootProject.name = "BlinkitClone"
+rootProject.name = "BlinkitKotlin"
 include ':app'

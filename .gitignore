@@ -1,16 +1,78 @@
+# ===============================
+# Android Studio / IntelliJ
+# ===============================
+.idea/
 *.iml
-.gradle
-/local.properties
-/.idea/caches
-/.idea/libraries
-/.idea/modules.xml
-/.idea/workspace.xml
-/.idea/navEditor.xml
-/.idea/assetWizardSettings.xml
-.DS_Store
-/build
-/captures
-.externalNativeBuild
-.cxx
+*.ipr
+*.iws
+
+# ===============================
+# Gradle
+# ===============================
+.gradle/
+build/
+*/build/
+
+# ===============================
+# Local configuration
+# ===============================
 local.properties
-/.idea/
+
+# ===============================
+# OS generated files
+# ===============================
+.DS_Store
+Thumbs.db
+
+# ===============================
+# Logs
+# ===============================
+*.log
+
+# ===============================
+# APK / AAB
+# ===============================
+*.apk
+*.aab
+
+# ===============================
+# Java / Kotlin
+# ===============================
+*.class
+
+# ===============================
+# Generated files
+# ===============================
+bin/
+gen/
+out/
+
+# ===============================
+# Android Studio caches
+# ===============================
+.caches/
+.kotlin/
+
+# ===============================
+# Keystore (CRITICAL)
+# ===============================
+*.jks
+*.keystore
+*.p12
+
+# ===============================
+# Firebase / Google services
+# ===============================
+google-services.json
+
+# ===============================
+# Environment / secrets
+# ===============================
+.env
+.env.*
+
+# ===============================
+# Native build
+# ===============================
+.externalNativeBuild/
+.cxx/
