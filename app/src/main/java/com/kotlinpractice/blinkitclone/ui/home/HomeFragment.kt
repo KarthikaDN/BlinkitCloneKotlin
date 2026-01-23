@@ -1,86 +1,91 @@
 package com.kotlinpractice.blinkitclone.ui.home
 
 import android.os.Bundle
-import android.view.LayoutInflater
 import android.view.View
-import android.view.ViewGroup
-import android.widget.Toast
 import androidx.core.view.isVisible
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
-import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
-import androidx.lifecycle.repeatOnLifecycle
+import androidx.paging.LoadState
 import androidx.recyclerview.widget.GridLayoutManager
-import androidx.recyclerview.widget.LinearLayoutManager
 import com.kotlinpractice.blinkitclone.R
 import com.kotlinpractice.blinkitclone.databinding.FragmentHomeBinding
-import com.kotlinpractice.blinkitclone.ui.state.ProductUiState
 import dagger.hilt.android.AndroidEntryPoint
+import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
+
 @AndroidEntryPoint
 class HomeFragment : Fragment(R.layout.fragment_home) {
 
     private var _binding: FragmentHomeBinding? = null
     private val binding get() = _binding!!
 
-    private val viewModel: HomeViewModel by viewModels()
-    private lateinit var adapter: HomeAdapter
-    private val ItemWidthDp = 160 //(This is a minimum width, not a fixed width)
+    private val viewModel: ProductViewModel by viewModels()
+    private lateinit var adapter: ProductPagingAdapter
+
+    private val itemWidthDp = 160 // minimum item width
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-
-        // ✅ INITIALIZATION HERE
         _binding = FragmentHomeBinding.bind(view)
 
         setupRecyclerView()
-        observeUiState()
-        retryProductsLoading()
-
-        viewModel.fetchProducts()
+        observePagingData()
+        observeLoadState()
+        setupRetry()
     }
 
+    // ---------------- RecyclerView ----------------
+
     private fun setupRecyclerView() {
-        adapter = HomeAdapter()
+        adapter = ProductPagingAdapter()
+
         val spanCount = calculateSpanCount()
+        val gridLayoutManager = GridLayoutManager(requireContext(), spanCount)
         binding.recyclerView.apply {
-            layoutManager = GridLayoutManager(requireContext(),spanCount)
+            layoutManager = gridLayoutManager
             adapter = this@HomeFragment.adapter
         }
     }
+
     private fun calculateSpanCount(): Int {
         val displayMetrics = resources.displayMetrics
         val screenWidthDp = displayMetrics.widthPixels / displayMetrics.density
-        return maxOf(2, (screenWidthDp / ItemWidthDp).toInt())
+        return maxOf(2, (screenWidthDp / itemWidthDp).toInt())
     }
-    private fun observeUiState() {
-        viewLifecycleOwner.lifecycleScope.launch {
-            viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
-                viewModel.uiState.collect { state ->
-                    binding.progressBar.isVisible = state.isLoading
 
-                    if (state.error != null) {
-                        binding.errorLayout.isVisible = true
-                    }
-                    else{
-                        binding.errorLayout.isVisible = false
-                        adapter.submitList(state.products)
-                    }
+    // ---------------- Paging ----------------
+
+    private fun observePagingData() {
+        viewLifecycleOwner.lifecycleScope.launch {
+            viewModel.products.collectLatest { pagingData ->
+                adapter.submitData(pagingData)
+            }
+        }
+    }
+
+    private fun observeLoadState() {
+        viewLifecycleOwner.lifecycleScope.launch {
+            adapter.loadStateFlow.collect { state ->
+                binding.apply {
+                    shimmer.isVisible = state.refresh is LoadState.Loading
+                    errorLayout.isVisible = state.refresh is LoadState.Error
+                    emptyView.isVisible =
+                        state.refresh is LoadState.NotLoading &&
+                                adapter.itemCount == 0
                 }
             }
         }
     }
 
-    private fun retryProductsLoading(){
+    private fun setupRetry() {
         binding.btnRetry.setOnClickListener {
-            viewModel.fetchProducts()
+            adapter.retry()
         }
     }
 
     override fun onDestroyView() {
         super.onDestroyView()
-        // ✅ VERY IMPORTANT (avoid memory leaks)
         _binding = null
     }
 }

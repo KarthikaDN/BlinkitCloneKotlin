@@ -1,6 +1,6 @@
 package com.kotlinpractice.blinkitclone.di
 
-import com.kotlinpractice.blinkitclone.data.api.ApiService
+import com.kotlinpractice.blinkitclone.data.remote.ProductApi
 import com.kotlinpractice.blinkitclone.utils.Constants
 import dagger.Module
 import dagger.Provides
@@ -24,6 +24,6 @@ object NetworkModule {
 
     @Provides
     @Singleton
-    fun provideApi(retrofit: Retrofit): ApiService =
-        retrofit.create(ApiService::class.java)
+    fun provideApi(retrofit: Retrofit): ProductApi =
+        retrofit.create(ProductApi::class.java)
 }
