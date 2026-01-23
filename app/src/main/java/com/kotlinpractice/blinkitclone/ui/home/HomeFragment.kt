@@ -5,11 +5,15 @@ import android.view.View
 import androidx.core.view.isVisible
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
+import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
+import androidx.lifecycle.repeatOnLifecycle
 import androidx.paging.LoadState
 import androidx.recyclerview.widget.GridLayoutManager
+import androidx.recyclerview.widget.LinearLayoutManager
 import com.kotlinpractice.blinkitclone.R
 import com.kotlinpractice.blinkitclone.databinding.FragmentHomeBinding
+import com.kotlinpractice.blinkitclone.ui.state.CategoryUiState
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
@@ -22,6 +26,7 @@ class HomeFragment : Fragment(R.layout.fragment_home) {
 
     private val viewModel: ProductViewModel by viewModels()
     private lateinit var adapter: ProductPagingAdapter
+    private lateinit var categoryAdapter: CategoryAdapter
 
     private val itemWidthDp = 160 // minimum item width
 
@@ -29,15 +34,31 @@ class HomeFragment : Fragment(R.layout.fragment_home) {
         super.onViewCreated(view, savedInstanceState)
         _binding = FragmentHomeBinding.bind(view)
 
-        setupRecyclerView()
-        observePagingData()
-        observeLoadState()
+        setupCategoryRecyclerView();
+        setupProductRecyclerView()
+        observeCategoryData()
+
         setupRetry()
     }
 
     // ---------------- RecyclerView ----------------
 
-    private fun setupRecyclerView() {
+    private fun setupCategoryRecyclerView(){
+        categoryAdapter = CategoryAdapter { category ->
+            viewModel.selectCategory(category)
+        }
+
+        binding.categoryRecyclerView.apply {
+            layoutManager = LinearLayoutManager(
+                context,
+                LinearLayoutManager.HORIZONTAL,
+                false
+            )
+            adapter = categoryAdapter
+        }
+    }
+
+    private fun setupProductRecyclerView() {
         adapter = ProductPagingAdapter()
 
         val spanCount = calculateSpanCount()
@@ -56,7 +77,34 @@ class HomeFragment : Fragment(R.layout.fragment_home) {
 
     // ---------------- Paging ----------------
 
-    private fun observePagingData() {
+    private fun observeCategoryData(){
+        viewModel.loadCategories()
+        viewLifecycleOwner.lifecycleScope.launch {
+            repeatOnLifecycle(Lifecycle.State.STARTED) {
+                viewModel.categoryState.collect { state ->
+                    when (state) {
+                        is CategoryUiState.Loading -> {
+                            binding.shimmer.isVisible = true
+                        }
+
+                        is CategoryUiState.Success -> {
+                            binding.shimmer.isVisible = false
+                            categoryAdapter.submitList(state.categories)
+                            observeProductPagingData()
+                            observeProductLoadState()
+                        }
+
+                        is CategoryUiState.Error -> {
+                            binding.shimmer.isVisible = false
+                            binding.errorLayout.isVisible = true
+                        }
+                    }
+                }
+            }
+        }
+
+    }
+    private fun observeProductPagingData() {
         viewLifecycleOwner.lifecycleScope.launch {
             viewModel.products.collectLatest { pagingData ->
                 adapter.submitData(pagingData)
@@ -64,7 +112,7 @@ class HomeFragment : Fragment(R.layout.fragment_home) {
         }
     }
 
-    private fun observeLoadState() {
+    private fun observeProductLoadState() {
         viewLifecycleOwner.lifecycleScope.launch {
             adapter.loadStateFlow.collect { state ->
                 binding.apply {
@@ -80,7 +128,7 @@ class HomeFragment : Fragment(R.layout.fragment_home) {
 
     private fun setupRetry() {
         binding.btnRetry.setOnClickListener {
-            adapter.retry()
+            viewModel.loadCategories()
         }
     }
 
