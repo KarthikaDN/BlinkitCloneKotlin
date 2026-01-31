@@ -36,7 +36,12 @@ class HomeFragment : Fragment(R.layout.fragment_home) {
 
         setupCategoryRecyclerView();
         setupProductRecyclerView()
+
         observeCategoryData()
+        observeCategoryClickEvent()
+
+        observeProductPagingData()
+        observeProductLoadState()
 
         setupRetry()
     }
@@ -78,7 +83,6 @@ class HomeFragment : Fragment(R.layout.fragment_home) {
     // ---------------- Paging ----------------
 
     private fun observeCategoryData(){
-        viewModel.loadCategories()
         viewLifecycleOwner.lifecycleScope.launch {
             repeatOnLifecycle(Lifecycle.State.STARTED) {
                 viewModel.categoryState.collect { state ->
@@ -90,8 +94,6 @@ class HomeFragment : Fragment(R.layout.fragment_home) {
                         is CategoryUiState.Success -> {
                             binding.shimmer.isVisible = false
                             categoryAdapter.submitList(state.categories)
-                            observeProductPagingData()
-                            observeProductLoadState()
                         }
 
                         is CategoryUiState.Error -> {
@@ -104,10 +106,22 @@ class HomeFragment : Fragment(R.layout.fragment_home) {
         }
 
     }
+
+    private fun observeCategoryClickEvent(){
+        viewLifecycleOwner.lifecycleScope.launch {
+            repeatOnLifecycle(Lifecycle.State.STARTED){
+                viewModel.onChangeCategory.collect {
+                    categoryAdapter.submitList(it)
+                }
+            }
+        }
+    }
     private fun observeProductPagingData() {
         viewLifecycleOwner.lifecycleScope.launch {
-            viewModel.products.collectLatest { pagingData ->
-                adapter.submitData(pagingData)
+            repeatOnLifecycle(Lifecycle.State.STARTED) {
+                viewModel.products.collectLatest {
+                    adapter.submitData(it)
+                }
             }
         }
     }

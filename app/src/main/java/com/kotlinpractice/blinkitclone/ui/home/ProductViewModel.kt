@@ -14,6 +14,8 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.mapNotNull
@@ -24,20 +26,27 @@ import javax.inject.Inject
 class ProductViewModel @Inject constructor(
     val repository: ProductRepository
 ) : ViewModel() {
+
+    init {
+        loadCategories()
+    }
+
     //Category Ui State
     private val _categoryState = MutableStateFlow<CategoryUiState>(CategoryUiState.Loading)
     val categoryState: StateFlow<CategoryUiState> = _categoryState
 
-    //List of all categories
-    private val _categories = MutableStateFlow<List<Category>>(emptyList())
-    val categories: StateFlow<List<Category>> = _categories
+    //Categories change event tracker
+    private val _onChangeCategory = MutableStateFlow<List<Category>>(emptyList())
+    val onChangeCategory:StateFlow<List<Category>> = _onChangeCategory
+
+    private val _categoriesLoaded = MutableStateFlow(false)
 
     //Selected Category
     private val _selectedCategory = MutableStateFlow("All")
     val selectedCategory: StateFlow<String> = _selectedCategory
     fun selectCategory(category: Category) {
-        _categories.value =
-            _categories.value.map {
+        _onChangeCategory.value =
+            _onChangeCategory.value.map {
                 it.copy(isSelected = it.name == category.name)
             }
 
@@ -55,8 +64,9 @@ class ProductViewModel @Inject constructor(
                     listOf(Category("all", "All", "", true)) +
                             result.map { it.toDomain() }
 
-                _categoryState.value =
-                    CategoryUiState.Success(categories)
+                _categoryState.value = CategoryUiState.Success(categories)
+                _onChangeCategory.value = categories
+                _categoriesLoaded.value = true
 
             } catch (e: Exception) {
                 _categoryState.value =
@@ -68,9 +78,17 @@ class ProductViewModel @Inject constructor(
     }
 
     val products: Flow<PagingData<Product>> =
-        selectedCategory.flatMapLatest { category ->
-            repository.getPagedProductsByCategory(
-                if (category == "All") null else category
-            )
-        }.cachedIn(viewModelScope)
+        combine(
+            _categoriesLoaded,
+            selectedCategory
+        ) { loaded, category ->
+            loaded to category
+        }
+            .filter { (loaded, _) -> loaded }   // 🚪 gate
+            .flatMapLatest { (_, category) ->
+                repository.getPagedProductsByCategory(
+                    if (category == "All") null else category
+                )
+            }
+            .cachedIn(viewModelScope)
 }
