@@ -5,20 +5,27 @@ import androidx.lifecycle.viewModelScope
 import androidx.paging.PagingData
 import androidx.paging.cachedIn
 import androidx.paging.filter
+import com.kotlinpractice.blinkitclone.data.mapper.categoryDtoToCategory
+import com.kotlinpractice.blinkitclone.data.mapper.categoryEntityToCategory
 import com.kotlinpractice.blinkitclone.data.mapper.toDomain
 import com.kotlinpractice.blinkitclone.data.model.Category
 import com.kotlinpractice.blinkitclone.data.model.Product
 import com.kotlinpractice.blinkitclone.data.repository.ProductRepository
+import com.kotlinpractice.blinkitclone.ui.state.CategorySyncState
 import com.kotlinpractice.blinkitclone.ui.state.CategoryUiState
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.flow.flatMapLatest
+import kotlinx.coroutines.flow.flow
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.mapNotNull
+import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
@@ -28,63 +35,59 @@ class ProductViewModel @Inject constructor(
 ) : ViewModel() {
 
     init {
-        loadCategories()
+        syncCategories()
     }
 
-    //Category Ui State
-    private val _categoryState = MutableStateFlow<CategoryUiState>(CategoryUiState.Loading)
-    val categoryState: StateFlow<CategoryUiState> = _categoryState
-
-    //Categories change event tracker
-    private val _onChangeCategory = MutableStateFlow<List<Category>>(emptyList())
-    val onChangeCategory:StateFlow<List<Category>> = _onChangeCategory
-
-    private val _categoriesLoaded = MutableStateFlow(false)
+    fun syncCategories(){
+        viewModelScope.launch {
+            repository.syncCategories()
+        }
+    }
 
     //Selected Category
     private val _selectedCategory = MutableStateFlow("All")
     val selectedCategory: StateFlow<String> = _selectedCategory
     fun selectCategory(category: Category) {
-        _onChangeCategory.value =
-            _onChangeCategory.value.map {
-                it.copy(isSelected = it.name == category.name)
-            }
-
         _selectedCategory.value = category.name
     }
 
-    fun loadCategories() {
-        viewModelScope.launch {
-            _categoryState.value = CategoryUiState.Loading
+    val categoriesUiState: StateFlow<CategoryUiState> =
+        combine(
+            repository.categorySyncState,
+            repository.getCategoriesFromRoom(),
+            selectedCategory
+        )
+        {
+            syncState,roomCategoryEntites,selected ->
 
-            try {
-                val result = repository.getCategories()
-
-                val categories =
-                    listOf(Category("all", "All", "", true)) +
-                            result.map { it.toDomain() }
-
-                _categoryState.value = CategoryUiState.Success(categories)
-                _onChangeCategory.value = categories
-                _categoriesLoaded.value = true
-
-            } catch (e: Exception) {
-                _categoryState.value =
-                    CategoryUiState.Error(
-                        e.message ?: "Failed to load categories"
-                    )
+            if(syncState == CategorySyncState.Error && roomCategoryEntites.isEmpty()){
+                return@combine CategoryUiState.Error(
+                    "Unable to load categories. Please check your internet connection."
+                )
             }
+
+            val allCategory = Category("all", "All", "", selected == "All")
+
+            val categories = listOf(allCategory) +
+                    roomCategoryEntites.map {
+                        it.categoryEntityToCategory().copy(isSelected = it.name == selected)
+                    }
+            CategoryUiState.Success(categories)
         }
-    }
+            .stateIn(
+                scope = viewModelScope,
+                started = SharingStarted.WhileSubscribed(5_000),
+                initialValue = CategoryUiState.Loading
+            )
 
     val products: Flow<PagingData<Product>> =
         combine(
-            _categoriesLoaded,
+            categoriesUiState,
             selectedCategory
-        ) { loaded, category ->
-            loaded to category
+        ) { categoriesUiState, category ->
+            categoriesUiState to category
         }
-            .filter { (loaded, _) -> loaded }   // 🚪 gate
+            .filter { (categoriesUiState, _) -> categoriesUiState is CategoryUiState.Success && categoriesUiState.categories.isNotEmpty() }   // 🚪 gate
             .flatMapLatest { (_, category) ->
                 repository.getPagedProductsByCategory(
                     if (category == "All") null else category

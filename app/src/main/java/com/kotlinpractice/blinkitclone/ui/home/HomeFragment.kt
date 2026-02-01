@@ -38,7 +38,7 @@ class HomeFragment : Fragment(R.layout.fragment_home) {
         setupProductRecyclerView()
 
         observeCategoryData()
-        observeCategoryClickEvent()
+//        observeCategoryClickEvent()
 
         observeProductPagingData()
         observeProductLoadState()
@@ -85,7 +85,7 @@ class HomeFragment : Fragment(R.layout.fragment_home) {
     private fun observeCategoryData(){
         viewLifecycleOwner.lifecycleScope.launch {
             repeatOnLifecycle(Lifecycle.State.STARTED) {
-                viewModel.categoryState.collect { state ->
+                viewModel.categoriesUiState.collect { state ->
                     when (state) {
                         is CategoryUiState.Loading -> {
                             binding.shimmer.isVisible = true
@@ -99,6 +99,7 @@ class HomeFragment : Fragment(R.layout.fragment_home) {
                         is CategoryUiState.Error -> {
                             binding.shimmer.isVisible = false
                             binding.errorLayout.isVisible = true
+                            binding.errorText.text = state.message
                         }
                     }
                 }
@@ -107,15 +108,15 @@ class HomeFragment : Fragment(R.layout.fragment_home) {
 
     }
 
-    private fun observeCategoryClickEvent(){
-        viewLifecycleOwner.lifecycleScope.launch {
-            repeatOnLifecycle(Lifecycle.State.STARTED){
-                viewModel.onChangeCategory.collect {
-                    categoryAdapter.submitList(it)
-                }
-            }
-        }
-    }
+//    private fun observeCategoryClickEvent(){
+//        viewLifecycleOwner.lifecycleScope.launch {
+//            repeatOnLifecycle(Lifecycle.State.STARTED){
+//                viewModel.onChangeCategory.collect {
+//                    categoryAdapter.submitList(it)
+//                }
+//            }
+//        }
+//    }
     private fun observeProductPagingData() {
         viewLifecycleOwner.lifecycleScope.launch {
             repeatOnLifecycle(Lifecycle.State.STARTED) {
@@ -142,7 +143,7 @@ class HomeFragment : Fragment(R.layout.fragment_home) {
 
     private fun setupRetry() {
         binding.btnRetry.setOnClickListener {
-            viewModel.loadCategories()
+            viewModel.syncCategories()
         }
     }
 
