@@ -12,7 +12,8 @@
     app:cardCornerRadius="16dp"
     app:cardElevation="0dp"
     app:strokeWidth="1dp"
-    app:strokeColor="@color/category_stroke">
+    app:strokeColor="#E5E7EB"
+    app:cardBackgroundColor="@android:color/white">
 
     <TextView
         android:id="@+id/tvCategory"
@@ -21,7 +22,8 @@
         android:paddingHorizontal="16dp"
         android:paddingVertical="8dp"
         android:text="Category"
+        android:fontFamily="@font/montserrat_regular"
         android:textSize="14sp"
         android:textStyle="bold"
-        android:textColor="@color/category_text_unselected"/>
+        android:textColor="#6B7280"/>
 </com.google.android.material.card.MaterialCardView>

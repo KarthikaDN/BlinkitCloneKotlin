@@ -2,12 +2,21 @@
 <resources>
     <color name="black">#FF000000</color>
     <color name="white">#FFFFFFFF</color>
-    <color name="category_bg_selected">#4CAF50</color>
-    <color name="category_bg_unselected">#FFFFFF</color>
-
-    <color name="category_text_selected">#FFFFFF</color>
-    <color name="category_text_unselected">#000000</color>
-
+    <color name="app_background">#F6FDF8</color>
     <color name="category_stroke">#DDDDDD</color>
+
+    <!-- ========================= -->
+    <!-- Category Chip – Selected -->
+    <!-- ========================= -->
+    <color name="category_bg_selected">#E8F5E9</color>      <!-- Light green background -->
+    <color name="category_stroke_selected">#22C55E</color>  <!-- Primary green stroke -->
+    <color name="category_text_selected">#1B5E20</color>    <!-- Dark green text -->
+
+    <!-- =========================== -->
+    <!-- Category Chip – Unselected -->
+    <!-- =========================== -->
+    <color name="category_bg_unselected">#FFFFFF</color>    <!-- White background -->
+    <color name="category_stroke_unselected">#E5E7EB</color> <!-- Light gray stroke -->
+    <color name="category_text_unselected">#6B7280</color>  <!-- Muted gray text -->
 
 </resources>

@@ -30,11 +30,13 @@ class CategoryAdapter(
         val category = getItem(position)
 
         holder.binding.apply {
+            val context = root.context
+
             tvCategory.text = category.name
 
             root.setCardBackgroundColor(
                 ContextCompat.getColor(
-                    root.context,
+                    context,
                     if (category.isSelected)
                         R.color.category_bg_selected
                     else
@@ -42,9 +44,17 @@ class CategoryAdapter(
                 )
             )
 
+            root.strokeColor = ContextCompat.getColor(
+                context,
+                if (category.isSelected)
+                    R.color.category_stroke_selected
+                else
+                    R.color.category_stroke_unselected
+            )
+
             tvCategory.setTextColor(
                 ContextCompat.getColor(
-                    root.context,
+                    context,
                     if (category.isSelected)
                         R.color.category_text_selected
                     else
@@ -57,6 +67,7 @@ class CategoryAdapter(
             }
         }
     }
+
 
     companion object {
         val Diff = object : DiffUtil.ItemCallback<Category>() {

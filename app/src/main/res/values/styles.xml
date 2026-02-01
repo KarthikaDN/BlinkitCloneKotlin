@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <style name="TextAppearance.App.Title" parent="TextAppearance.Material3.TitleLarge">
+        <item name="fontFamily">@font/montserrat_semibold</item>
+        <item name="android:textSize">18sp</item>
+        <item name="android:textColor">#1F2937</item>
+    </style>
+
+    <style name="TextAppearance.App.BottomNav"
+        parent="TextAppearance.Material3.LabelMedium">
+        <item name="fontFamily">@font/montserrat_semibold</item>
+        <item name="android:textSize">12sp</item>
+    </style>
+
+</resources>
